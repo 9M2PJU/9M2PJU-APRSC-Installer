@@ -45,11 +45,10 @@ jobs:
           set -e
           PLATFORM="linux/${{ matrix.arch }}"
           IMG=debian:12
-          # Mount the repo at /work and build inside the container so the
-          # arch is determined by the container's emulated uname -m.
           # `make make-deb` generates debian/changelog from
           # debian/changelog.release (substituting @VERSION@/@RFCDATE@)
-          # and then invokes dpkg-buildpackage.
+          # and then invokes dpkg-buildpackage. It needs ./configure to
+          # have run first so that Makefile exists (from Makefile.in).
           docker run --rm --platform "$PLATFORM" \
             -v "$PWD":/work -w /work "$IMG" bash -c '
               set -e
@@ -59,6 +58,7 @@ jobs:
                 lsb-release libevent-dev libssl-dev libcap-dev \
                 zlib1g-dev libsctp-dev
               cd src
+              ./configure
               make make-deb
             '
 
@@ -179,18 +179,15 @@ jobs:
         run: |
           set -e
           PLATFORM="linux/${{ matrix.arch }}"
-          # Use Canonical's snapcraft image from ghcr.io. The snapcore/snapcraft
-          # Docker Hub image no longer carries the core22 tag.
+          # Use Canonical's snapcraft rock from ghcr.io. The tag format is
+          # <snapcraft-version>_core<base>, e.g. 7_core22. The project must
+          # be mounted at /project. --destructive-mode builds on the host
+          # without LXD (required inside a container).
           docker run --rm --platform "$PLATFORM" \
-            -v "$PWD":/work -w /work \
+            -v "$PWD":/project -w /project \
             -e SNAPCRAFT_BUILD_ENVIRONMENT=host \
-            ghcr.io/canonical/snapcraft:core22 bash -c '
+            ghcr.io/canonical/snapcraft:7_core22 bash -c '
               set -e
-              apt-get update
-              apt-get install -y --no-install-recommends \
-                build-essential autoconf automake libtool \
-                libevent-dev libssl-dev libcap-dev zlib1g-dev libsctp-dev
-              cd /work
               snapcraft --destructive-mode
             '
 

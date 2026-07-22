@@ -10,8 +10,9 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: systemd
 BuildRequires: gcc make autoconf automake libtool
 BuildRequires: libevent-devel openssl-devel libcap-devel zlib-devel
-# libsctp-devel is available on Fedora but not always on RHEL/EL derivatives.
-BuildRequires: (libsctp-devel if fedora) || (lksctp-tools-devel if rhel)
+# libsctp-devel on Fedora, lksctp-tools-devel on RHEL/EL derivatives.
+%{?fedora:BuildRequires: libsctp-devel}
+%{?rhel:BuildRequires: lksctp-tools-devel}
 
 %description
 
