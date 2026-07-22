@@ -137,11 +137,7 @@ jobs:
               # spec.in is missing (it only declares systemd). This is
               # done here at build time so that src/rpm/aprsc.spec.in
               # stays identical to upstream and wont conflict on sync.
-              sed -i "/^BuildRequires: systemd$/a\\
-              BuildRequires: gcc make autoconf automake libtool\\
-              BuildRequires: libevent-devel openssl-devel libcap-devel zlib-devel\\
-              %{?fedora:BuildRequires: lksctp-tools-devel}\\
-              %{?rhel:BuildRequires: lksctp-tools-devel}" aprsc.spec
+              sed -i "/^BuildRequires: systemd$/a\\BuildRequires: gcc make autoconf automake libtool\\nBuildRequires: libevent-devel openssl-devel libcap-devel zlib-devel\\n%{?fedora:BuildRequires: lksctp-tools-devel}\\n%{?rhel:BuildRequires: lksctp-tools-devel}" aprsc.spec
               # Set up rpmbuild tree.
               mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
               cp aprsc-'"$VERSION"'.tar.gz rpmbuild/SOURCES/
