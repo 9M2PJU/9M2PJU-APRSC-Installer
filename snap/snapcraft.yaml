@@ -1,10 +1,22 @@
 name: aprsc
 base: core22
-# Version is set at build time by the aprsc part (see adopt-info below),
-# derived from src/VERSION plus the git describe suffix, matching the
-# scheme used by src/Makefile.in (DISTVERSION := aprsc-$(VERSION).$(SRCVERSION)).
+# Version is set at build time by version-script (see below), derived
+# from src/VERSION plus the git describe suffix, matching the scheme
+# used by src/Makefile.in (DISTVERSION := aprsc-$(VERSION).$(SRCVERSION)).
 version: adopt
 adopt-info: aprsc
+version-script: |
+  base_version="$(cat src/VERSION | tr -d '[:space:]')"
+  if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
+    git_suffix="$(git describe --long --dirty=M 2>/dev/null | sed -e 's/^.*-//' || true)"
+    if [ -n "$git_suffix" ]; then
+      echo "${base_version}.${git_suffix}"
+    else
+      echo "$base_version"
+    fi
+  else
+    echo "$base_version"
+  fi
 summary: APRS-IS core server for ham radio
 description: |
   aprsc is an open-source APRS-IS server intended for core and Tier2
@@ -82,25 +94,6 @@ parts:
       - libsctp1
     override-build: |
       set -e
-      # Derive the snap version the same way src/Makefile.in does:
-      #   VERSION      := $(shell cat VERSION)
-      #   GITVERSION   := $(shell git describe --long --dirty=M | sed 's/^.*-//')
-      #   DISTVERSION  := aprsc-$(VERSION).$(SRCVERSION)
-      # Fall back to plain VERSION when not in a git checkout (e.g. a
-      # source tarball), so the snap still builds.
-      base_version="$(cat src/VERSION | tr -d '[:space:]')"
-      if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
-        git_suffix="$(git describe --long --dirty=M 2>/dev/null | sed -e 's/^.*-//' || true)"
-        if [ -n "$git_suffix" ]; then
-          snap_version="${base_version}.${git_suffix}"
-        else
-          snap_version="$base_version"
-        fi
-      else
-        snap_version="$base_version"
-      fi
-      # snapcraftctl set-version must be ≤ 32 chars and match [a-zA-Z0-9.+~_-]+.
-      snapcraftctl set-version "$snap_version"
       cd src
       ./configure \
         --sbindir=/opt/aprsc/sbin \
