@@ -174,6 +174,24 @@ jobs:
         if: matrix.arch == 'arm64'
         uses: docker/setup-qemu-action@v3
 
+      - name: Patch snap version from src/VERSION + git
+        run: |
+          set -e
+          base_version="$(cat src/VERSION | tr -d '[:space:]')"
+          if git rev-parse --git-dir >/dev/null 2>&1; then
+            git_suffix="$(git describe --long --dirty=M 2>/dev/null | sed -e 's/^.*-//' || true)"
+            if [ -n "$git_suffix" ]; then
+              snap_version="${base_version}.${git_suffix}"
+            else
+              snap_version="$base_version"
+            fi
+          else
+            snap_version="$base_version"
+          fi
+          echo "Snap version: $snap_version"
+          sed -i "s/version: '0.0.0-placeholder'/version: '$snap_version'/" snap/snapcraft.yaml
+          grep '^version:' snap/snapcraft.yaml
+
       - name: Build .snap in container
         run: |
           set -e

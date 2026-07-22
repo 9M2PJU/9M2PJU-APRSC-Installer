@@ -1,22 +1,10 @@
 name: aprsc
 base: core22
-# Version is set at build time by version-script (see below), derived
+# Version is patched at build time by the CI workflow (sed replacement)
 # from src/VERSION plus the git describe suffix, matching the scheme
 # used by src/Makefile.in (DISTVERSION := aprsc-$(VERSION).$(SRCVERSION)).
-version: adopt
-adopt-info: aprsc
-version-script: |
-  base_version="$(cat src/VERSION | tr -d '[:space:]')"
-  if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
-    git_suffix="$(git describe --long --dirty=M 2>/dev/null | sed -e 's/^.*-//' || true)"
-    if [ -n "$git_suffix" ]; then
-      echo "${base_version}.${git_suffix}"
-    else
-      echo "$base_version"
-    fi
-  else
-    echo "$base_version"
-  fi
+# The placeholder below is replaced before snapcraft runs.
+version: '0.0.0-placeholder'
 summary: APRS-IS core server for ham radio
 description: |
   aprsc is an open-source APRS-IS server intended for core and Tier2
