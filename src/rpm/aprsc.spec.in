@@ -8,11 +8,6 @@ URL: https://groups.google.com/forum/#!forum/aprsc
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: systemd
-BuildRequires: gcc make autoconf automake libtool
-BuildRequires: libevent-devel openssl-devel libcap-devel zlib-devel
-# lksctp-tools-devel is the SCTP dev package on both Fedora and EL.
-%{?fedora:BuildRequires: lksctp-tools-devel}
-%{?rhel:BuildRequires: lksctp-tools-devel}
 
 %description
 
