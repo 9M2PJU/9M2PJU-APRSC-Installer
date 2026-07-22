@@ -125,16 +125,12 @@ jobs:
           docker run --rm --platform "$PLATFORM" \
             -v "$PWD":/work -w /work "$IMG" bash -c '
               set -e
-              # Install build deps. The SCTP dev package is named
-              # lksctp-devel on Fedora, lksctp-tools-devel on EL9.
+              # Install build deps. lksctp-tools-devel is the SCTP dev
+              # package on both Fedora and EL9.
               PKGS="gcc make autoconf automake libtool \
                     systemd rpm-build libevent-devel openssl-devel \
-                    libcap-devel zlib-devel"
-              SCTP_PKG="lksctp-devel"
-              if grep -q "AlmaLinux\|Red Hat\|CentOS" /etc/redhat-release 2>/dev/null; then
-                SCTP_PKG="lksctp-tools-devel"
-              fi
-              dnf install -y $PKGS "$SCTP_PKG"
+                    libcap-devel zlib-devel lksctp-tools-devel"
+              dnf install -y $PKGS
               # Generate the spec from the template.
               sed "s/@VERSION@/'"$VERSION"'/g" src/rpm/aprsc.spec.in > aprsc.spec
               # Set up rpmbuild tree.
@@ -193,6 +189,7 @@ jobs:
             -e SNAPCRAFT_BUILD_ENVIRONMENT=host \
             ghcr.io/canonical/snapcraft:7_core22 -c '
               set -e
+              apt-get update
               snapcraft --destructive-mode
             '
 
