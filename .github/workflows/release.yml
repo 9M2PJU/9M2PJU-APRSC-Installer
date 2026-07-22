@@ -125,13 +125,16 @@ jobs:
           docker run --rm --platform "$PLATFORM" \
             -v "$PWD":/work -w /work "$IMG" bash -c '
               set -e
-              # Install build deps. libcap-devel is named libcap-devel on
-              # both Fedora and EL; libsctp-devel is in Fedora only.
+              # Install build deps. The SCTP dev package is named
+              # lksctp-devel on Fedora, lksctp-tools-devel on EL9.
               PKGS="gcc make autoconf automake libtool \
                     systemd rpm-build libevent-devel openssl-devel \
                     libcap-devel zlib-devel"
-              dnf install -y $PKGS libsctp-devel 2>/dev/null || \
-                dnf install -y $PKGS
+              SCTP_PKG="lksctp-devel"
+              if grep -q "AlmaLinux\|Red Hat\|CentOS" /etc/redhat-release 2>/dev/null; then
+                SCTP_PKG="lksctp-tools-devel"
+              fi
+              dnf install -y $PKGS "$SCTP_PKG"
               # Generate the spec from the template.
               sed "s/@VERSION@/'"$VERSION"'/g" src/rpm/aprsc.spec.in > aprsc.spec
               # Set up rpmbuild tree.
@@ -182,11 +185,13 @@ jobs:
           # Use Canonical's snapcraft rock from ghcr.io. The tag format is
           # <snapcraft-version>_core<base>, e.g. 7_core22. The project must
           # be mounted at /project. --destructive-mode builds on the host
-          # without LXD (required inside a container).
+          # without LXD (required inside a container). The image entrypoint
+          # is snapcraft via pebble, so we override it to bash.
           docker run --rm --platform "$PLATFORM" \
+            --entrypoint bash \
             -v "$PWD":/project -w /project \
             -e SNAPCRAFT_BUILD_ENVIRONMENT=host \
-            ghcr.io/canonical/snapcraft:7_core22 bash -c '
+            ghcr.io/canonical/snapcraft:7_core22 -c '
               set -e
               snapcraft --destructive-mode
             '
