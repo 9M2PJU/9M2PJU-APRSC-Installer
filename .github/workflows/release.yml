@@ -47,6 +47,9 @@ jobs:
           IMG=debian:12
           # Mount the repo at /work and build inside the container so the
           # arch is determined by the container's emulated uname -m.
+          # `make make-deb` generates debian/changelog from
+          # debian/changelog.release (substituting @VERSION@/@RFCDATE@)
+          # and then invokes dpkg-buildpackage.
           docker run --rm --platform "$PLATFORM" \
             -v "$PWD":/work -w /work "$IMG" bash -c '
               set -e
@@ -56,7 +59,7 @@ jobs:
                 lsb-release libevent-dev libssl-dev libcap-dev \
                 zlib1g-dev libsctp-dev
               cd src
-              dpkg-buildpackage -us -uc -b
+              make make-deb
             '
 
       - name: Collect artifacts
@@ -109,12 +112,15 @@ jobs:
           VERSION="$(cat src/VERSION)"
           # Build a Source0 tarball matching the spec's expected layout:
           #   aprsc-<version>/...  (top-level repo contents, no VCS/build junk).
-          TAR="aprsc-${VERSION}.tar.gz"
+          # Write it to /tmp so it is not inside the directory being archived
+          # (otherwise tar exits 1 with "file changed as we read it").
+          TAR="/tmp/aprsc-${VERSION}.tar.gz"
           tar czf "$TAR" \
             --exclude='.git' --exclude='build' --exclude='build-out' \
             --exclude='build-down' --exclude='rpmbuild' --exclude='out' \
-            --exclude='*.tar.gz' --exclude='*.log' --exclude='*~' \
+            --exclude='*.log' --exclude='*~' \
             --transform "s,^\.,aprsc-${VERSION}," -C "$PWD" .
+          cp "$TAR" "$PWD/aprsc-${VERSION}.tar.gz"
 
           docker run --rm --platform "$PLATFORM" \
             -v "$PWD":/work -w /work "$IMG" bash -c '
@@ -173,11 +179,12 @@ jobs:
         run: |
           set -e
           PLATFORM="linux/${{ matrix.arch }}"
-          # Use the official snapcraft image; it provides snapcraft + lxd.
+          # Use Canonical's snapcraft image from ghcr.io. The snapcore/snapcraft
+          # Docker Hub image no longer carries the core22 tag.
           docker run --rm --platform "$PLATFORM" \
             -v "$PWD":/work -w /work \
             -e SNAPCRAFT_BUILD_ENVIRONMENT=host \
-            snapcore/snapcraft:core22 bash -c '
+            ghcr.io/canonical/snapcraft:core22 bash -c '
               set -e
               apt-get update
               apt-get install -y --no-install-recommends \
