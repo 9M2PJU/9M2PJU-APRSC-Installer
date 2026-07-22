@@ -1,0 +1,227 @@
+name: Package
+
+# Builds .deb, .rpm and .snap for amd64 and arm64.
+# - On every push/PR: builds and uploads artifacts (downloadable from the run).
+# - On v* tags: also creates a GitHub Release with all artifacts attached.
+#
+# arm64 builds use QEMU binfmt_misc emulation on standard amd64 runners
+# (docker/setup-qemu-action). They are correct but slower than native builds.
+
+on:
+  push:
+    branches: [ main ]
+    tags:    [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Override version string (defaults to src/VERSION)'
+        required: false
+
+permissions:
+  contents: write   # required for softprops/action-gh-release on tags
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # .deb  (Debian 12 / bookworm) for amd64 and arm64
+  # ---------------------------------------------------------------------------
+  deb:
+    name: deb ${{ matrix.arch }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build .deb in container
+        run: |
+          set -e
+          PLATFORM="linux/${{ matrix.arch }}"
+          IMG=debian:12
+          # Mount the repo at /work and build inside the container so the
+          # arch is determined by the container's emulated uname -m.
+          docker run --rm --platform "$PLATFORM" \
+            -v "$PWD":/work -w /work "$IMG" bash -c '
+              set -e
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                build-essential debhelper fakeroot \
+                lsb-release libevent-dev libssl-dev libcap-dev \
+                zlib1g-dev libsctp-dev
+              cd src
+              dpkg-buildpackage -us -uc -b
+            '
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          # dpkg-buildpackage writes ../aprsc_*.deb relative to src/
+          find . -maxdepth 2 -name 'aprsc_*.deb' -exec cp {} out/ \;
+          ls -la out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.arch }}
+          path: out/*.deb
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # .rpm  (Fedora + EL9/Alma) for amd64 and arm64
+  # ---------------------------------------------------------------------------
+  rpm:
+    name: rpm ${{ matrix.distro }} ${{ matrix.arch }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [ fedora-40, fedora-42, fedora-43, el9 ]
+        arch:   [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Map distro to image
+        id: img
+        run: |
+          case "${{ matrix.distro }}" in
+            fedora-40) IMG=fedora:40 ;;
+            fedora-42) IMG=fedora:42 ;;
+            fedora-43) IMG=fedora:43 ;;
+            el9)       IMG=almalinux:9 ;;
+          esac
+          echo "image=$IMG" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build .rpm in container
+        run: |
+          set -e
+          PLATFORM="linux/${{ matrix.arch }}"
+          IMG="${{ steps.img.outputs.image }}"
+          VERSION="$(cat src/VERSION)"
+          # Build a Source0 tarball matching the spec's expected layout:
+          #   aprsc-<version>/...  (top-level repo contents, no VCS/build junk).
+          TAR="aprsc-${VERSION}.tar.gz"
+          tar czf "$TAR" \
+            --exclude='.git' --exclude='build' --exclude='build-out' \
+            --exclude='build-down' --exclude='rpmbuild' --exclude='out' \
+            --exclude='*.tar.gz' --exclude='*.log' --exclude='*~' \
+            --transform "s,^\.,aprsc-${VERSION}," -C "$PWD" .
+
+          docker run --rm --platform "$PLATFORM" \
+            -v "$PWD":/work -w /work "$IMG" bash -c '
+              set -e
+              # Install build deps. libcap-devel is named libcap-devel on
+              # both Fedora and EL; libsctp-devel is in Fedora only.
+              PKGS="gcc make autoconf automake libtool \
+                    systemd rpm-build libevent-devel openssl-devel \
+                    libcap-devel zlib-devel"
+              dnf install -y $PKGS libsctp-devel 2>/dev/null || \
+                dnf install -y $PKGS
+              # Generate the spec from the template.
+              sed "s/@VERSION@/'"$VERSION"'/g" src/rpm/aprsc.spec.in > aprsc.spec
+              # Set up rpmbuild tree.
+              mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+              cp aprsc-'"$VERSION"'.tar.gz rpmbuild/SOURCES/
+              cp aprsc.spec rpmbuild/SPECS/
+              rpmbuild -ba --define "_topdir $PWD/rpmbuild" rpmbuild/SPECS/aprsc.spec
+            '
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find rpmbuild/RPMS -name 'aprsc-*.rpm' -exec cp {} out/ \;
+          # Rename to include distro+arch for clarity.
+          cd out
+          for f in aprsc-*.rpm; do
+            mv "$f" "${f%.rpm}.${{ matrix.distro }}.${{ matrix.arch }}.rpm"
+          done
+          ls -la
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rpm-${{ matrix.distro }}-${{ matrix.arch }}
+          path: out/*.rpm
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # .snap  for amd64 and arm64
+  # ---------------------------------------------------------------------------
+  snap:
+    name: snap ${{ matrix.arch }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build .snap in container
+        run: |
+          set -e
+          PLATFORM="linux/${{ matrix.arch }}"
+          # Use the official snapcraft image; it provides snapcraft + lxd.
+          docker run --rm --platform "$PLATFORM" \
+            -v "$PWD":/work -w /work \
+            -e SNAPCRAFT_BUILD_ENVIRONMENT=host \
+            snapcore/snapcraft:core22 bash -c '
+              set -e
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                build-essential autoconf automake libtool \
+                libevent-dev libssl-dev libcap-dev zlib1g-dev libsctp-dev
+              cd /work
+              snapcraft --destructive-mode
+            '
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          cp *.snap out/
+          ls -la out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snap-${{ matrix.arch }}
+          path: out/*.snap
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Release: only on v* tags. Merges all artifacts and publishes a Release.
+  # ---------------------------------------------------------------------------
+  release:
+    name: GitHub Release
+    needs: [ deb, rpm, snap ]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.snap' \) \
+            -exec cp {} release/ \;
+          ls -la release/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true

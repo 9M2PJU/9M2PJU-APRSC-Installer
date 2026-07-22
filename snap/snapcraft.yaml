@@ -1,0 +1,118 @@
+name: aprsc
+base: core22
+# Version is set at build time by the aprsc part (see adopt-info below),
+# derived from src/VERSION plus the git describe suffix, matching the
+# scheme used by src/Makefile.in (DISTVERSION := aprsc-$(VERSION).$(SRCVERSION)).
+version: adopt
+adopt-info: aprsc
+summary: APRS-IS core server for ham radio
+description: |
+  aprsc is an open-source APRS-IS server intended for core and Tier2
+  APRS-IS infrastructure. It is written in C and is meant to be run on
+  dedicated servers by licensed radio amateurs.
+
+  This snap runs aprsc as a systemd service under the snap's confinement.
+  Configuration lives in $SNAP_DATA/etc/aprsc.conf and logs in
+  $SNAP_COMMON/logs.
+
+license: BSD-3-Clause
+grade: stable
+confinement: strict
+
+# Both amd64 and arm64 are built natively (arm64 via QEMU emulation in CI),
+# so each snap targets the arch it was built on.
+architectures:
+  - build-on: amd64
+    build-for: amd64
+  - build-on: arm64
+    build-for: arm64
+
+# aprsc is compiled with hardcoded /opt/aprsc paths (see src/Makefile.in).
+# Use a layout to map those onto writable snap data locations so the
+# binary works unmodified inside the confinement.
+layout:
+  /opt/aprsc/etc:
+    bind: $SNAP_DATA/etc
+  /opt/aprsc/logs:
+    bind: $SNAP_COMMON/logs
+  /opt/aprsc/data:
+    bind: $SNAP_COMMON/data
+  /opt/aprsc/web:
+    bind: $SNAP/opt/aprsc/web
+
+apps:
+  aprsc:
+    daemon: simple
+    install-mode: disable
+    command: opt/aprsc/sbin/aprsc
+    plugs:
+      - network
+      - network-bind
+      - network-observe
+      - system-observe
+      - hardware-observe
+  # Convenience CLI for status/control.
+  aprscctl:
+    command: bin/aprscctl
+    plugs:
+      - network
+      - network-bind
+
+parts:
+  aprsc:
+    plugin: nil
+    source: .
+    source-type: local
+    build-packages:
+      - gcc
+      - make
+      - autoconf
+      - automake
+      - libtool
+      - libevent-dev
+      - libssl-dev
+      - libcap-dev
+      - zlib1g-dev
+      - libsctp-dev
+    stage-packages:
+      - libevent-2.1-7
+      - libssl3
+      - libcap2
+      - zlib1g
+      - libsctp1
+    override-build: |
+      set -e
+      # Derive the snap version the same way src/Makefile.in does:
+      #   VERSION      := $(shell cat VERSION)
+      #   GITVERSION   := $(shell git describe --long --dirty=M | sed 's/^.*-//')
+      #   DISTVERSION  := aprsc-$(VERSION).$(SRCVERSION)
+      # Fall back to plain VERSION when not in a git checkout (e.g. a
+      # source tarball), so the snap still builds.
+      base_version="$(cat src/VERSION | tr -d '[:space:]')"
+      if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
+        git_suffix="$(git describe --long --dirty=M 2>/dev/null | sed -e 's/^.*-//' || true)"
+        if [ -n "$git_suffix" ]; then
+          snap_version="${base_version}.${git_suffix}"
+        else
+          snap_version="$base_version"
+        fi
+      else
+        snap_version="$base_version"
+      fi
+      # snapcraftctl set-version must be ≤ 32 chars and match [a-zA-Z0-9.+~_-]+.
+      snapcraftctl set-version "$snap_version"
+      cd src
+      ./configure \
+        --sbindir=/opt/aprsc/sbin \
+        --sysconfdir=/opt/aprsc/etc \
+        --localstatedir=/opt/aprsc \
+        --mandir=/usr/share/man
+      make -j"$(nproc)"
+      make DESTDIR="$SNAPCRAFT_PART_INSTALL" install
+      # Stage runtime dirs.
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/bin"
+      cat > "$SNAPCRAFT_PART_INSTALL/bin/aprscctl" <<'EOF'
+      #!/bin/sh
+      exec "$SNAP/opt/aprsc/sbin/aprsc" "$@"
+      EOF
+      chmod +x "$SNAPCRAFT_PART_INSTALL/bin/aprscctl"
