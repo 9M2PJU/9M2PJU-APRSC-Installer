@@ -18,7 +18,7 @@
  *	Thanks!
  */
 
-#define VERSION_BRANCH ""
+#define VERSION_BRANCH "9M2PJU"
 
 #endif
 
