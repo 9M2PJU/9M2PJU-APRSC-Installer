@@ -35,7 +35,7 @@ architecture, then either installs a binary package (Debian, Ubuntu, Fedora
 on x86_64) or builds aprsc from source (all other Linux, FreeBSD, macOS,
 and any Linux on arm64):
 
-    curl -fsSL https://raw.githubusercontent.com/9M2PJU/aprsc/main/tools/install.sh | sudo sh
+    curl -fsSL https://raw.githubusercontent.com/9M2PJU/9M2PJU-APRSC-Installer/main/tools/install.sh | sudo sh
 
 Supported platforms for the one-liner:
 

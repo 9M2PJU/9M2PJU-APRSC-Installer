@@ -7,22 +7,22 @@
 High-performance, lean APRS-IS server for core, hub and Tier-2 APRS-IS
 infrastructure. Built for Linux, FreeBSD and macOS.
 
-[![Build Status](https://github.com/hessu/aprsc/actions/workflows/tests.yml/badge.svg)](https://github.com/9M2PJU/aprsc/actions/workflows/tests.yml)
-[![Package Status](https://github.com/9M2PJU/aprsc/actions/workflows/release.yml/badge.svg)](https://github.com/9M2PJU/aprsc/actions/workflows/release.yml)
-[![Latest Release](https://img.shields.io/github/v/release/9M2PJU/aprsc?sort=date&display_name=release&label=Latest%20Release)](https://github.com/9M2PJU/aprsc/releases)
-[![License](https://img.shields.io/github/license/9M2PJU/aprsc?label=License)](https://github.com/9M2PJU/aprsc/blob/main/doc/LICENSE)
-[![Languages](https://img.shields.io/github/languages/top/9M2PJU/aprsc?label=C)](https://github.com/9M2PJU/aprsc)
-[![Repo Size](https://img.shields.io/github/repo-size/9M2PJU/aprsc?label=Repo%20Size)](https://github.com/9M2PJU/aprsc)
-[![Commits](https://img.shields.io/github/commits-since/9M2PJU/aprsc/latest?label=Commits%20Since%20Latest)](https://github.com/9M2PJU/aprsc/commits/main)
-[![Last Commit](https://img.shields.io/github/last-commit/9M2PJU/aprsc?label=Last%20Commit)](https://github.com/9M2PJU/aprsc/commits/main)
-[![GitHub Stars](https://img.shields.io/github/stars/9M2PJU/aprsc?style=social)](https://github.com/9M2PJU/aprsc/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/9M2PJU/aprsc?style=social)](https://github.com/9M2PJU/aprsc/forks)
-[![GitHub Issues](https://img.shields.io/github/issues/9M2PJU/aprsc?label=Issues)](https://github.com/9M2PJU/aprsc/issues)
-[![GitHub PRs](https://img.shields.io/github/issues-pr/9M2PJU/aprsc?label=Open%20PRs)](https://github.com/9M2PJU/aprsc/pulls)
+[![Build Status](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/tests.yml/badge.svg)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/tests.yml)
+[![Package Status](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/release.yml/badge.svg)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/9M2PJU/9M2PJU-APRSC-Installer?sort=date&display_name=release&label=Latest%20Release)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/releases)
+[![License](https://img.shields.io/github/license/9M2PJU/9M2PJU-APRSC-Installer?label=License)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/blob/main/doc/LICENSE)
+[![Languages](https://img.shields.io/github/languages/top/9M2PJU/9M2PJU-APRSC-Installer?label=C)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer)
+[![Repo Size](https://img.shields.io/github/repo-size/9M2PJU/9M2PJU-APRSC-Installer?label=Repo%20Size)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer)
+[![Commits](https://img.shields.io/github/commits-since/9M2PJU/9M2PJU-APRSC-Installer/latest?label=Commits%20Since%20Latest)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/commits/main)
+[![Last Commit](https://img.shields.io/github/last-commit/9M2PJU/9M2PJU-APRSC-Installer?label=Last%20Commit)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/commits/main)
+[![GitHub Stars](https://img.shields.io/github/stars/9M2PJU/9M2PJU-APRSC-Installer?style=social)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/9M2PJU/9M2PJU-APRSC-Installer?style=social)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/forks)
+[![GitHub Issues](https://img.shields.io/github/issues/9M2PJU/9M2PJU-APRSC-Installer?label=Issues)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/issues)
+[![GitHub PRs](https://img.shields.io/github/issues-pr/9M2PJU/9M2PJU-APRSC-Installer?label=Open%20PRs)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/pulls)
 [![AUR aprsc-9m2pju-bin](https://img.shields.io/aur/version/aprsc-9m2pju-bin?label=AUR%20bin)](https://aur.archlinux.org/packages/aprsc-9m2pju-bin)
 [![AUR aprsc-9m2pju-git](https://img.shields.io/aur/version/aprsc-9m2pju-git?label=AUR%20git)](https://aur.archlinux.org/packages/aprsc-9m2pju-git)
 [![Snap](https://snapcraft.io/aprsc/badge.svg)](https://snapcraft.io/aprsc)
-[![Discussions](https://img.shields.io/github/discussions/9M2PJU/aprsc?label=Discussions)](https://github.com/9M2PJU/aprsc/discussions)
+[![Discussions](https://img.shields.io/github/discussions/9M2PJU/9M2PJU-APRSC-Installer?label=Discussions)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/discussions)
 [![Mailing List](https://img.shields.io/badge/Mailing%20List-aprsc-blue.svg)](https://groups.google.com/forum/#!forum/aprsc)
 
 </div>
@@ -92,7 +92,7 @@ aprsc from source (all other Linux, FreeBSD, macOS, and any Linux on
 `arm64`).
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/9M2PJU/aprsc/main/tools/install.sh | sudo sh
+curl -fsSL https://raw.githubusercontent.com/9M2PJU/9M2PJU-APRSC-Installer/main/tools/install.sh | sudo sh
 ```
 
 **Supported by the one-liner:**

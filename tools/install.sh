@@ -2,7 +2,7 @@
 # aprsc one-liner installer.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/9M2PJU/aprsc/main/tools/install.sh | sudo sh
+#   curl -fsSL https://raw.githubusercontent.com/9M2PJU/9M2PJU-APRSC-Installer/main/tools/install.sh | sudo sh
 #
 # Supports:
 #   - Debian/Ubuntu (x86_64, i386): apt repository + binary package
@@ -159,7 +159,7 @@ install_source() {
 
 	# Acquire the source tree.
 	if have git; then
-		git clone --depth 1 https://github.com/9M2PJU/aprsc.git aprsc
+		git clone --depth 1 https://github.com/9M2PJU/9M2PJU-APRSC-Installer.git aprsc
 	else
 		err "git is required for the source build - please install git and re-run"
 	fi
