@@ -167,18 +167,14 @@ sub load_test($$$)
 		warn sprintf("UDP packet loss: %d of %d (%.2f%%)\n", $lost, $txn, $loss_pct);
 	}
 	ok($rxn >= int($txn * 0.98), 1, "Received too few lines from blob (lost $lost of $txn, ${loss_pct}%)");
-	# Byte count is only checked when we received everything; with loss
-	# the byte count will differ by the lost packet sizes, so skip it.
-	SKIP: {
-		skip "byte count only exact with no UDP loss", 1 if $lost > 0;
-		ok($rxl, $txl, "Received wrong number of bytes from blob");
-	}
-	# Outstanding bytes are expected to be 0 when nothing was lost; with
-	# loss the missing bytes will never arrive, so don't fail on that.
-	SKIP: {
-		skip "outstanding bytes only exact with no UDP loss", 1 if $lost > 0;
-		ok($outstanding, 0, "There are outstanding bytes in the server after timeout");
-	}
+	# Byte count is only exact when we received everything; with loss the
+	# byte count differs by the lost packet sizes, so skip the check.
+	skip($lost > 0 ? "byte count inexact with UDP loss" : 0,
+	     $rxl, $txl, "Received wrong number of bytes from blob");
+	# Outstanding bytes are 0 when nothing was lost; with loss the missing
+	# bytes never arrive, so skip that check too.
+	skip($lost > 0 ? "outstanding bytes inexact with UDP loss" : 0,
+	     $outstanding, 0, "There are outstanding bytes in the server after timeout");
 }
 
 warn "Load testing full feed => UDP peer:\n";
