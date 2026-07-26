@@ -1,0 +1,76 @@
+# FreeBSD OCI image for aprsc (9M2PJU fork).
+#
+# Builds aprsc from source on FreeBSD 14.3, runs via Podman on FreeBSD
+# hosts (amd64 and arm64). Docker does not run natively on FreeBSD -
+# this image is built and run with Podman.
+#
+# Users mount their own aprsc.conf at /opt/aprsc/etc/aprsc.conf.
+#
+# Build (on a FreeBSD host with Podman):
+#   podman build -f Dockerfile.freebsd -t aprsc-freebsd .
+# Run:
+#   podman run -d -p 14580:14580 -p 10152:10152 -p 8080:8080 -p 14501:14501 \
+#     -v /path/to/aprsc.conf:/opt/aprsc/etc/aprsc.conf:ro \
+#     -v aprsc-logs:/opt/aprsc/logs \
+#     aprsc-freebsd
+
+# ---------- builder ----------
+FROM ghcr.io/freebsd/freebsd-runtime:14.3 AS builder
+
+# Install build dependencies via pkg. libevent2 and openssl live
+# under /usr/local on FreeBSD, so we set CFLAGS/LDFLAGS accordingly.
+RUN pkg install -y \
+        gcc gmake autoconf automake libevent2 openssl \
+    && rm -rf /var/cache/pkg/*
+
+ENV CFLAGS="-I/usr/local/include"
+ENV LDFLAGS="-L/usr/local/lib/event2"
+
+WORKDIR /src
+COPY . /src/
+
+# Build aprsc. FreeBSD make is not GNU make - use gmake.
+RUN cd src \
+    && ./configure \
+    && gmake -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 2)" \
+    && gmake DESTDIR=/out install
+
+# ---------- runtime ----------
+FROM ghcr.io/freebsd/freebsd-runtime:14.3 AS runtime
+
+# Runtime shared libraries aprsc links against on FreeBSD.
+RUN pkg install -y \
+        libevent2 openssl \
+    && rm -rf /var/cache/pkg/*
+
+# Copy the built install tree.
+COPY --from=builder /out/opt/aprsc /opt/aprsc
+
+# Create runtime directories and a non-root user. aprsc requires -u
+# <user> when using -t (chroot) - the two are paired security features.
+RUN set -e \
+    && mkdir -p /opt/aprsc/etc /opt/aprsc/logs /opt/aprsc/data \
+    && pw useradd -n aprsc -u 1001 -d /nonexistent -s /usr/sbin/nologin -c "aprsc" \
+    && chown -R aprsc:aprsc /opt/aprsc/etc /opt/aprsc/logs /opt/aprsc/data
+
+# APRS-IS ports:
+#   14580  TCP/UDP  client/igate port (user-specified filters)
+#   10152  TCP/UDP  full feed
+#   8080   UDP      packet submission
+#   14501  TCP      HTTP status page
+EXPOSE 14580/udp 14580/tcp 10152/udp 10152/tcp 8080/udp 14501/tcp
+
+VOLUME ["/opt/aprsc/etc", "/opt/aprsc/logs", "/opt/aprsc/data"]
+
+# Run aprsc in the foreground (no -f flag = don't daemonize), chrooted
+# to /opt/aprsc, dropping privileges to the aprsc user. Logs go to
+# /opt/aprsc/logs (relative to the chroot, so -r logs resolves to
+# /opt/aprsc/logs).
+#
+# aprsc tries to set POSIX capabilities at startup. Inside an
+# unprivileged container this fails with "Operation not permitted",
+# but aprsc treats it as a non-fatal warning. The container must be
+# run with --cap-add=CAP_NET_BIND_SERVICE to bind ports < 1024.
+ENTRYPOINT ["/opt/aprsc/sbin/aprsc", "-u", "aprsc", "-t", "/opt/aprsc", \
+            "-e", "info", "-o", "file", "-r", "logs", \
+            "-c", "etc/aprsc.conf"]
