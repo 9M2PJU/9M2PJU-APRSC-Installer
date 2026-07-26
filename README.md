@@ -84,17 +84,43 @@ This fork adds the following on top of upstream `hessu/aprsc`:
 
 ## Quick install
 
-### One-liner (any Linux, FreeBSD, macOS)
-
-Auto-detects OS and architecture, then either installs a binary package
-(Debian, Ubuntu, Fedora on `x86_64`) or builds from source (all other
-Linux, FreeBSD, macOS, and any Linux on `arm64`):
+The recommended way to install aprsc is the **one-liner installer**
+([`tools/install.sh`](tools/install.sh)), which lives in this repository.
+It auto-detects your operating system and architecture, then either
+installs a binary package (Debian, Ubuntu, Fedora on `x86_64`) or builds
+aprsc from source (all other Linux, FreeBSD, macOS, and any Linux on
+`arm64`).
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/9M2PJU/aprsc/main/tools/install.sh | sudo sh
 ```
 
-### Debian / Ubuntu (apt)
+**Supported by the one-liner:**
+
+| Platform | Arch | Method |
+|----------|------|--------|
+| Debian / Ubuntu | `x86_64`, `i386` | apt repo + binary package |
+| Fedora | `x86_64` | dnf repo + binary package |
+| Other Linux | `amd64`, `arm64`, others | source build (auto-detects apt/dnf/apk/pacman for deps) |
+| FreeBSD | `amd64`, `arm64` | source build (libevent2 from pkg/ports) |
+| macOS | `amd64` (Intel), `arm64` (Apple Silicon) | source build (Homebrew or MacPorts) |
+
+After the install finishes, edit `/opt/aprsc/etc/aprsc.conf` and start
+aprsc:
+
+```bash
+sudo systemctl enable --now aprsc
+# Edit /opt/aprsc/etc/aprsc.conf to taste, then:
+sudo systemctl reload aprsc
+```
+
+<details>
+<summary><b>Prefer manual setup? (apt / dnf)</b></summary>
+
+If you'd rather configure the package repository by hand instead of using
+the one-liner, here are the per-distro steps.
+
+**Debian / Ubuntu (apt):**
 
 ```bash
 # Pick your codename: noble | jammy | focal | trixie | bookworm | bullseye
@@ -114,7 +140,7 @@ sudo apt-get update
 sudo apt-get install aprsc
 ```
 
-### Fedora (dnf)
+**Fedora (dnf):**
 
 ```bash
 sudo dnf install curl
@@ -122,16 +148,11 @@ sudo curl -o /etc/yum.repos.d/aprsc.repo http://he.fi/aprsc/down/aprsc-fedora.re
 sudo dnf install aprsc
 ```
 
-### After install
+See [`doc/INSTALLING.md`](doc/INSTALLING.md) for the full manual walk-through.
 
-```bash
-sudo systemctl enable --now aprsc
-# Edit /opt/aprsc/etc/aprsc.conf to taste, then:
-sudo systemctl reload aprsc
-```
+</details>
 
-See [`doc/INSTALLING.md`](doc/INSTALLING.md) and
-[`doc/CONFIGURATION.md`](doc/CONFIGURATION.md) for full details.
+See [`doc/CONFIGURATION.md`](doc/CONFIGURATION.md) for configuration details.
 
 ---
 
