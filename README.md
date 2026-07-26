@@ -135,3 +135,4 @@ This creates a GitHub Release with all pre-built packages attached.
 Have fun!
 
 - Hessu, OH7LZB
+- 9M2PJU (fork maintainer)
