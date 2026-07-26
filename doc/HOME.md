@@ -50,8 +50,8 @@ libevent2 library, no other extra libraries are needed.
 
 Linux and OS X are the main development environments and will receive
 premium support, but FreeBSD and Solaris 11 are known to work too.  Packaged
-binaries for Debian, Ubuntu and CentOS are available for super-easy
-installations and automatic upgrades using APT and YUM.
+binaries for Debian, Ubuntu and Fedora are available for super-easy
+installations and automatic upgrades using APT and DNF.
 
 
 Discussion group

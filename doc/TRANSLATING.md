@@ -32,7 +32,7 @@ On Ubuntu or Debian:
 
     sudo service aprsc reload
 
-On Centos (and others):
+On Fedora (and others):
 
     sudo /etc/init.d/aprsc reload
 

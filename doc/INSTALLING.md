@@ -27,6 +27,35 @@ of other Unix-like platforms do work, but when it comes to building and
 installing, you're mostly on your own.
 
 
+Quick install (one-liner)
+---------------------------
+
+A helper script is provided which auto-detects your operating system and
+architecture, then either installs a binary package (Debian, Ubuntu, Fedora
+on x86_64) or builds aprsc from source (all other Linux, FreeBSD, macOS,
+and any Linux on arm64):
+
+    curl -fsSL https://raw.githubusercontent.com/9M2PJU/aprsc/main/tools/install.sh | sudo sh
+
+Supported platforms for the one-liner:
+
+* Linux x86_64: Debian/Ubuntu/Fedora get a binary package; other
+  distributions are built from source.
+* Linux arm64: built from source (binary packages are x86_64/i386 only).
+* FreeBSD amd64 and arm64: built from source (libevent2 from pkg/ports).
+* macOS amd64 (Intel) and arm64 (Apple Silicon): built from source
+  (libevent2 + openssl from Homebrew or MacPorts).
+
+The source build clones the git repository, installs build dependencies
+using your system's package manager, runs `./configure && make && make
+install`, and places the binary in `/opt/aprsc/sbin/aprsc` with the example
+config in `/opt/aprsc/etc/aprsc.conf`.
+
+After the install finishes, edit `/opt/aprsc/etc/aprsc.conf` and start
+aprsc as described in the "Startup with systemd" section below (Linux), or
+run the binary directly on FreeBSD/macOS.
+
+
 Call-home functionality
 --------------------------
 

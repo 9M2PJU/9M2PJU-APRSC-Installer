@@ -4,8 +4,8 @@ Compiling aprsc from source
 
 If you're familiar with compiling software from the source code, and
 pre-built binary packages are not available for your platform, this is where
-you need to start.  Binary packages are provided for Debian and Ubuntu
-systems.
+you need to start.  Binary packages are provided for Debian, Ubuntu and
+Fedora systems.
 
 aprsc has been built and tested on:
 
@@ -13,15 +13,21 @@ aprsc has been built and tested on:
 * Debian 11.0, "bullseye": i386 and x86_64
 * Debian 12.0, "bookworm": x86_64
 * Debian 13.0, "trixie": x86_64
-* Mac OS X 10.8 (Snow Leopard): x86
-* FreeBSD 8.2 and 9.0 on amd64, 7.2 on i386
-* Solaris 11 (SunOS 5.11 11.0 i86pc i386)
-* Raspberry Pi (debian 7, Raspbian): ARM11/ARMv6
-* Windows 8 (Cygwin)
+* Fedora Core 42 and 43: x86_64
 
-If you wish to have decent support, please pick Ubuntu or Debian. The other
-platforms do work, but when it comes to building and installing, you're
-mostly on your own.
+The following platforms have been known to build and work in the past, but
+are not regularly tested any more.  Patches to keep them working are
+welcome:
+
+* Mac OS X: x86 (libevent2 from MacPorts)
+* FreeBSD on amd64 and i386 (libevent2 from ports)
+* Solaris 11 (SunOS 5.11 i86pc)
+* Raspberry Pi (Raspbian/Debian): ARM
+* Windows under Cygwin (see WINDOWS.md)
+
+If you wish to have decent support, please pick Ubuntu, Debian or Fedora.
+The other platforms may work, but when it comes to building and installing,
+you're mostly on your own.
 
 
 Prerequirements and dependencies

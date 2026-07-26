@@ -7,8 +7,9 @@ aprsc - an APRS-IS server in C
 
 
 You're looking at the source code of aprsc, an open-source APRS-IS
-server. This is the 9M2PJU fork, which adds pre-built packaging via
-GitHub Actions (deb, rpm, snap) and AUR packages.
+server. This is the **9M2PJU fork**, which builds on the upstream
+[hessu/aprsc](https://github.com/hessu/aprsc) and adds pre-built
+packaging, broader platform support, and a one-liner installer.
 
 For more information, please refer to the following resources:
 
@@ -18,12 +19,20 @@ For more information, please refer to the following resources:
 * [Conference paper, Digital Communications Conference 2012, Atlanta, GA](http://he.fi/aprsc/dcc-2012-aprsc.pdf)
 * [Contributing to the aprsc project](http://he.fi/aprsc/CONTRIBUTING.html)
 
-Packaging
----------
 
-Pre-built packages are produced by the [Packaging workflow](.github/workflows/release.yml)
-for **amd64** and **arm64**. Arm64 builds use QEMU binfmt emulation on
-standard GitHub runners.
+Improvements over upstream
+--------------------------
+
+This fork adds the following on top of upstream hessu/aprsc:
+
+### Pre-built binary packages (CI)
+
+A [packaging workflow](.github/workflows/release.yml) builds `.deb`,
+`.rpm` and `.snap` packages for **amd64 and arm64** on every push to
+`main` and on pull requests.  Arm64 builds use QEMU `binfmt_misc`
+emulation on standard GitHub runners.  Pushing a tag matching `v*`
+(e.g. `v2.1.21`) publishes a [GitHub Release](../../releases) with all
+packages attached.
 
 | Format | Targets | Architectures |
 |--------|---------|---------------|
@@ -31,12 +40,18 @@ standard GitHub runners.
 | `.rpm` | Fedora 40, 42, 43; Alma/Rocky Linux 9 (EL9) | amd64, arm64 |
 | `.snap` | Snapcraft `core22` base | amd64, arm64 |
 
-The workflow runs on every push to `main` and on pull requests; the
-resulting packages are uploaded as workflow artifacts downloadable from
-the Actions run. Pushing a tag matching `v*` (e.g. `v2.1.21`) also
-publishes a [GitHub Release](../../releases) with all packages attached.
+### One-liner installer
 
-### AUR (Arch Linux)
+A helper script auto-detects the operating system and architecture and
+either installs a binary package (Debian, Ubuntu, Fedora on x86_64) or
+builds aprsc from source (all other Linux, FreeBSD, macOS, and any
+Linux on arm64):
+
+    curl -fsSL https://raw.githubusercontent.com/9M2PJU/aprsc/main/tools/install.sh | sudo sh
+
+See [INSTALLING](doc/INSTALLING.md) for details.
+
+### AUR packages (Arch Linux)
 
 Two AUR packages are maintained:
 
@@ -56,38 +71,61 @@ the AppArmor profile, and the man page.
 ### Snap
 
 The snap runs aprsc as a `daemon: simple` service under strict
-confinement. Runtime paths under `/opt/aprsc/{etc,logs,data,web}` are
+confinement.  Runtime paths under `/opt/aprsc/{etc,logs,data,web}` are
 remapped via the snap `layout:` to `$SNAP_DATA` / `$SNAP_COMMON` so the
-unmodified binary works inside the confinement. The snap version is
+unmodified binary works inside the confinement.  The snap version is
 derived at build time from `src/VERSION` plus the `git describe` suffix,
 matching the scheme used by `src/Makefile.in` (`DISTVERSION`).
+
+### Documentation updates
+
+The documentation under `doc/` has been refreshed to reflect the
+current state of the project:
+
+* Tested-platforms list in `doc/BUILDING.md` updated to cover the
+  distributions that actually receive binary packages (Debian, Ubuntu,
+  Fedora), with FreeBSD, macOS, Solaris, Raspberry Pi and Windows
+  moved to a "known to work historically" section.
+* Outdated CentOS references replaced with Fedora (CentOS is EOL; the
+  fork ships Fedora packages) across `doc/HOME.md`, `doc/README.md`,
+  `doc/CONFIGURATION.md`, `doc/TRANSLATING.md` and `doc/DEBUGGING.md`.
+* Fixed the "Mac OS X 10.8 (Snow Leopard)" mislabel (10.8 is Mountain
+  Lion, 10.6 is Snow Leopard) in `doc/BUILDING.md`.
+* Added a "Quick install (one-liner)" section to `doc/INSTALLING.md`.
+
 
 Syncing with upstream
 ---------------------
 
-This fork tracks [hessu/aprsc](https://github.com/hessu/aprsc). To sync
+This fork tracks [hessu/aprsc](https://github.com/hessu/aprsc).  To sync
 with upstream:
 
     git remote add upstream https://github.com/hessu/aprsc.git  # if not already added
     git fetch upstream
     git merge upstream/main
 
-Only one upstream file is modified in this fork: `README.md` (this file).
-If a merge conflict occurs here, resolve it by keeping both the upstream
-changes and the sections below the `Packaging` heading.
+The following upstream files are modified in this fork and may need
+manual conflict resolution on sync (keep both the upstream changes and
+the fork-specific edits):
+
+* `README.md` (this file)
+* `doc/BUILDING.md`, `doc/HOME.md`, `doc/README.md`, `doc/CONFIGURATION.md`,
+  `doc/TRANSLATING.md`, `doc/DEBUGGING.md`, `doc/INSTALLING.md`
 
 All other fork-specific files are **new files** that do not exist
 upstream, so they will never conflict:
 
 * `.github/workflows/release.yml` — the packaging workflow
 * `snap/snapcraft.yaml` — snap manifest
+* `tools/install.sh` — one-liner installer
 
 The RPM spec (`src/rpm/aprsc.spec.in`) is **not** modified in this fork.
 Missing `BuildRequires` are patched at build time by the workflow via
-`sed`, so the file stays identical to upstream and won't conflict on sync.
+`sed`, so the file stays identical to upstream and won't conflict on
+sync.
 
-After syncing, push to `main` to trigger a build. If the build succeeds,
-tag a new release:
+After syncing, push to `main` to trigger a build.  If the build
+succeeds, tag a new release:
 
     git tag -a v<version> -m "aprsc v<version>"
     git push origin v<version>
