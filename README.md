@@ -9,6 +9,7 @@ infrastructure. Built for Linux, FreeBSD and macOS.
 
 [![Build Status](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/tests.yml/badge.svg)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/tests.yml)
 [![Package Status](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/release.yml/badge.svg)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/release.yml)
+[![Docker Status](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/docker.yml/badge.svg)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/actions/workflows/docker.yml)
 [![Latest Release](https://img.shields.io/github/v/release/9M2PJU/9M2PJU-APRSC-Installer?sort=date&display_name=release&label=Latest%20Release)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/releases)
 [![License](https://img.shields.io/github/license/9M2PJU/9M2PJU-APRSC-Installer?label=License)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/blob/main/doc/LICENSE)
 [![Languages](https://img.shields.io/github/languages/top/9M2PJU/9M2PJU-APRSC-Installer?label=C)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer)
@@ -22,6 +23,7 @@ infrastructure. Built for Linux, FreeBSD and macOS.
 [![AUR aprsc-9m2pju-bin](https://img.shields.io/aur/version/aprsc-9m2pju-bin?label=AUR%20bin)](https://aur.archlinux.org/packages/aprsc-9m2pju-bin)
 [![AUR aprsc-9m2pju-git](https://img.shields.io/aur/version/aprsc-9m2pju-git?label=AUR%20git)](https://aur.archlinux.org/packages/aprsc-9m2pju-git)
 [![Snap](https://snapcraft.io/aprsc/badge.svg)](https://snapcraft.io/aprsc)
+[![Docker](https://img.shields.io/badge/ghcr.io-9m2pju%2Faprsc-blue)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/pkgs/container/aprsc)
 [![Discussions](https://img.shields.io/github/discussions/9M2PJU/9M2PJU-APRSC-Installer?label=Discussions)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/discussions)
 [![Mailing List](https://img.shields.io/badge/Mailing%20List-aprsc-blue.svg)](https://groups.google.com/forum/#!forum/aprsc)
 
@@ -31,8 +33,9 @@ infrastructure. Built for Linux, FreeBSD and macOS.
 
 > **This is the 9M2PJU fork** of [hessu/aprsc](https://github.com/hessu/aprsc),
 > adding pre-built binary packages (`.deb` / `.rpm` / `.snap` for `amd64` +
-> `arm64`), an AUR presence, a one-liner installer, refreshed docs, and
-> broader platform support. It tracks upstream and is kept sync-safe.
+> `arm64`), Docker / Podman container images (Linux + FreeBSD), an AUR
+> presence, a one-liner installer, refreshed docs, and broader platform
+> support. It tracks upstream and is kept sync-safe.
 
 ---
 
@@ -41,6 +44,7 @@ infrastructure. Built for Linux, FreeBSD and macOS.
 - [Overview](#overview)
 - [Improvements over upstream](#improvements-over-upstream)
 - [Quick install](#quick-install)
+- [Docker / Podman](#docker--podman)
 - [Pre-built packages](#pre-built-packages)
 - [AUR packages (Arch Linux)](#aur-packages-arch-linux)
 - [Snap](#snap)
@@ -74,9 +78,11 @@ This fork adds the following on top of upstream `hessu/aprsc`:
 | Area | What changed |
 |------|--------------|
 | **CI packaging** | New [release workflow](.github/workflows/release.yml) builds `.deb`, `.rpm` and `.snap` for `amd64` + `arm64` on every push and publishes GitHub Releases on `v*` tags. |
-| **One-liner installer** | `tools/install.sh` auto-detects OS/arch and installs a binary package or builds from source. |
+| **Docker / Podman** | Multi-arch Docker image (`amd64` + `arm64`) published to [GHCR](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/pkgs/container/aprsc). Separate `Dockerfile.freebsd` for Podman on FreeBSD. One-liner installer auto-detects OS and uses Docker (Linux) or Podman (FreeBSD). |
+| **One-liner installer** | `tools/install.sh` auto-detects OS/arch and installs a binary package or builds from source. `tools/install-docker.sh` does the same for container deployments. |
 | **AUR packages** | `aprsc-9m2pju-git` and `aprsc-9m2pju-bin` published on the AUR. |
 | **Snap** | `snap/snapcraft.yaml` ships aprsc under strict confinement with `layout:` remapping of `/opt/aprsc/*`. |
+| **Fork identification** | Version string customized to `aprsc 2.1.21-9M2PJU` via `src/version_branch.h` for easy identification in CLI, login banners, and status pages. |
 | **Documentation refresh** | Tested-platforms list updated, CentOS → Fedora, macOS version mislabel fixed, one-liner install section added. |
 | **Sync-safe fork** | Only `README.md` and `doc/*.md` are modified upstream files; all other fork additions are new files that cannot conflict. The RPM spec is patched at build time via `sed`. |
 
@@ -153,6 +159,112 @@ See [`doc/INSTALLING.md`](doc/INSTALLING.md) for the full manual walk-through.
 </details>
 
 See [`doc/CONFIGURATION.md`](doc/CONFIGURATION.md) for configuration details.
+
+---
+
+## Docker / Podman
+
+aprsc is available as a container image on the
+[GitHub Container Registry](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/pkgs/container/aprsc).
+
+### One-liner install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/9M2PJU/9M2PJU-APRSC-Installer/main/tools/install-docker.sh | sudo sh
+```
+
+The script auto-detects the OS:
+
+| Platform | Container runtime | Image | Source |
+|----------|-------------------|-------|--------|
+| **Linux** | Docker | `ghcr.io/9m2pju/aprsc:latest` | pulled from GHCR (pre-built, multi-arch) |
+| **FreeBSD** | Podman | `aprsc-freebsd:latest` | built locally from `Dockerfile.freebsd` |
+
+On Linux, the script installs Docker if missing, pulls the pre-built
+multi-arch image from GHCR, seeds `/opt/aprsc/etc/aprsc.conf` from the
+example (with `MagicBadness` commented out), and starts the container
+with the required capabilities and port mappings.
+
+On FreeBSD, Docker does not run natively (the old `docker-freebsd` port
+was deleted in 2020 — Docker depends on Linux kernel features like
+cgroups and namespaces that FreeBSD doesn't provide). The script
+installs Podman instead, clones the repo, builds the FreeBSD image
+locally from `Dockerfile.freebsd` using the official
+`ghcr.io/freebsd/freebsd-runtime:14.3` base, and starts it.
+
+### Manual Docker run
+
+```bash
+docker pull ghcr.io/9m2pju/aprsc:latest
+
+mkdir -p /opt/aprsc/{etc,logs,data}
+# Seed config from the example in the image
+docker run --rm --entrypoint cat ghcr.io/9m2pju/aprsc:latest \
+  /opt/aprsc/etc/aprsc.conf > /opt/aprsc/etc/aprsc.conf
+# Comment out MagicBadness (operator attention gate)
+sed -i 's/^MagicBadness/#MagicBadness/' /opt/aprsc/etc/aprsc.conf
+# Edit ServerId, PassCode, MyAdmin, MyEmail, Uplink in the config
+
+docker run -d --name aprsc \
+  --restart unless-stopped \
+  --cap-add=CAP_NET_BIND_SERVICE \
+  --cap-add=CAP_SETUID --cap-add=CAP_SETGID \
+  --cap-add=CAP_SYS_CHROOT --cap-add=CAP_SYS_RESOURCE \
+  -p 14580:14580/tcp -p 14580:14580/udp \
+  -p 10152:10152/tcp -p 10152:10152/udp \
+  -p 8080:8080/udp \
+  -p 14501:14501/tcp \
+  -v /opt/aprsc/etc:/opt/aprsc/etc:ro \
+  -v /opt/aprsc/logs:/opt/aprsc/logs \
+  -v /opt/aprsc/data:/opt/aprsc/data \
+  ghcr.io/9m2pju/aprsc:latest
+```
+
+### Image tags
+
+| Tag | Meaning |
+|-----|---------|
+| `ghcr.io/9m2pju/aprsc:latest` | Latest release (on `v*` tags) |
+| `ghcr.io/9m2pju/aprsc:main` | Latest push to `main` branch |
+| `ghcr.io/9m2pju/aprsc:2.1.21` | Specific version (on `v2.1.21` tag) |
+| `ghcr.io/9m2pju/aprsc:2.1.21-9M2PJU` | Specific fork version |
+
+Multi-arch: `linux/amd64` + `linux/arm64`. Image size ~83MB.
+
+### Configuration
+
+Configuration is done via config file mounts only (no environment
+variables). Mount your `aprsc.conf` at `/opt/aprsc/etc/aprsc.conf`:
+
+```
+/opt/aprsc/etc/    ← aprsc.conf (read-only mount)
+/opt/aprsc/logs/   ← log files
+/opt/aprsc/data/   ← persistent state
+```
+
+The container runs aprsc in the foreground (no `-f` daemonize flag),
+chrooted to `/opt/aprsc`, dropping privileges to an `aprsc` user.
+The following capabilities are required:
+
+- `CAP_NET_BIND_SERVICE` — bind to ports < 1024 (14501, 14580, 10152)
+- `CAP_SETUID` / `CAP_SETGID` — drop privileges to the `aprsc` user
+- `CAP_SYS_CHROOT` — enter the `/opt/aprsc` chroot
+- `CAP_SYS_RESOURCE` — raise file descriptor limits
+
+### Building the FreeBSD image manually
+
+```bash
+git clone https://github.com/9M2PJU/9M2PJU-APRSC-Installer.git
+cd 9M2PJU-APRSC-Installer
+podman build -f Dockerfile.freebsd -t aprsc-freebsd:latest .
+```
+
+### Why no FreeBSD image on GHCR?
+
+GitHub Actions has no native FreeBSD runners, so the FreeBSD image
+cannot be built in CI. It must be built locally on a FreeBSD host
+using Podman and `Dockerfile.freebsd`. The Linux image is pre-built
+and published to GHCR for both `amd64` and `arm64`.
 
 ---
 
@@ -374,8 +486,14 @@ keep both the upstream changes and the fork-specific edits):
 **Fork-only new files** (will never conflict):
 
 - `.github/workflows/release.yml` — packaging workflow
+- `.github/workflows/docker.yml` — Docker image build & push workflow
+- `Dockerfile` — Linux Docker image (multi-stage build on debian:12-slim)
+- `Dockerfile.freebsd` — FreeBSD Podman image (freebsd-runtime:14.3 base)
+- `.dockerignore` — Docker build context exclusions
 - `snap/snapcraft.yaml` — snap manifest
-- `tools/install.sh` — one-liner installer
+- `tools/install.sh` — one-liner installer (native packages / source build)
+- `tools/install-docker.sh` — one-liner installer (Docker / Podman)
+- `src/version_branch.h` — fork version suffix (`9M2PJU`)
 - `AGENTS.md` — agent conventions
 
 The RPM spec (`src/rpm/aprsc.spec.in`) is **not** modified in this fork.
