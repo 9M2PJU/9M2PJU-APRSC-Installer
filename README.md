@@ -24,6 +24,7 @@ infrastructure. Built for Linux, FreeBSD and macOS.
 [![AUR aprsc-9m2pju-git](https://img.shields.io/aur/version/aprsc-9m2pju-git?label=AUR%20git)](https://aur.archlinux.org/packages/aprsc-9m2pju-git)
 [![Snap](https://snapcraft.io/aprsc/badge.svg)](https://snapcraft.io/aprsc)
 [![Docker](https://img.shields.io/badge/ghcr.io-9m2pju%2Faprsc-blue)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/pkgs/container/aprsc)
+[![Docker Hub](https://img.shields.io/docker/pulls/9m2pju/aprsc?label=Docker%20Hub%20pulls)](https://hub.docker.com/r/9m2pju/aprsc)
 [![Discussions](https://img.shields.io/github/discussions/9M2PJU/9M2PJU-APRSC-Installer?label=Discussions)](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/discussions)
 [![Mailing List](https://img.shields.io/badge/Mailing%20List-aprsc-blue.svg)](https://groups.google.com/forum/#!forum/aprsc)
 
@@ -164,8 +165,10 @@ See [`doc/CONFIGURATION.md`](doc/CONFIGURATION.md) for configuration details.
 
 ## Docker / Podman
 
-aprsc is available as a container image on the
+aprsc is available as a container image on both
+[Docker Hub](https://hub.docker.com/r/9m2pju/aprsc) and the
 [GitHub Container Registry](https://github.com/9M2PJU/9M2PJU-APRSC-Installer/pkgs/container/aprsc).
+Both registries carry identical multi-arch images.
 
 ### One-liner install
 
@@ -177,12 +180,12 @@ The script auto-detects the OS:
 
 | Platform | Container runtime | Image | Source |
 |----------|-------------------|-------|--------|
-| **Linux** | Docker | `ghcr.io/9m2pju/aprsc:latest` | pulled from GHCR (pre-built, multi-arch) |
+| **Linux** | Docker | `docker.io/9m2pju/aprsc:latest` | pulled from Docker Hub (pre-built, multi-arch) |
 | **FreeBSD** | Podman | `aprsc-freebsd:latest` | built locally from `Dockerfile.freebsd` |
 
 On Linux, the script installs Docker if missing, pulls the pre-built
-multi-arch image from GHCR, seeds `/opt/aprsc/etc/aprsc.conf` from the
-example (with `MagicBadness` commented out), and starts the container
+multi-arch image from Docker Hub, seeds `/opt/aprsc/etc/aprsc.conf` from
+the example (with `MagicBadness` commented out), and starts the container
 with the required capabilities and port mappings.
 
 On FreeBSD, Docker does not run natively (the old `docker-freebsd` port
@@ -195,11 +198,12 @@ locally from `Dockerfile.freebsd` using the official
 ### Manual Docker run
 
 ```bash
-docker pull ghcr.io/9m2pju/aprsc:latest
+docker pull docker.io/9m2pju/aprsc:latest
+# or: docker pull ghcr.io/9m2pju/aprsc:latest
 
 mkdir -p /opt/aprsc/{etc,logs,data}
 # Seed config from the example in the image
-docker run --rm --entrypoint cat ghcr.io/9m2pju/aprsc:latest \
+docker run --rm --entrypoint cat docker.io/9m2pju/aprsc:latest \
   /opt/aprsc/etc/aprsc.conf > /opt/aprsc/etc/aprsc.conf
 # Comment out MagicBadness (operator attention gate)
 sed -i 's/^MagicBadness/#MagicBadness/' /opt/aprsc/etc/aprsc.conf
@@ -217,17 +221,20 @@ docker run -d --name aprsc \
   -v /opt/aprsc/etc:/opt/aprsc/etc:ro \
   -v /opt/aprsc/logs:/opt/aprsc/logs \
   -v /opt/aprsc/data:/opt/aprsc/data \
-  ghcr.io/9m2pju/aprsc:latest
+  docker.io/9m2pju/aprsc:latest
 ```
 
 ### Image tags
 
+Both registries carry the same tags. Docker Hub is shown below; replace
+`docker.io` with `ghcr.io` for GHCR.
+
 | Tag | Meaning |
 |-----|---------|
-| `ghcr.io/9m2pju/aprsc:latest` | Latest release (on `v*` tags) |
-| `ghcr.io/9m2pju/aprsc:main` | Latest push to `main` branch |
-| `ghcr.io/9m2pju/aprsc:2.1.21` | Specific version (on `v2.1.21` tag) |
-| `ghcr.io/9m2pju/aprsc:2.1.21-9M2PJU` | Specific fork version |
+| `docker.io/9m2pju/aprsc:latest` | Latest release (on `v*` tags) |
+| `docker.io/9m2pju/aprsc:main` | Latest push to `main` branch |
+| `docker.io/9m2pju/aprsc:2.1.21` | Specific version (on `v2.1.21` tag) |
+| `docker.io/9m2pju/aprsc:2.1.21-9M2PJU` | Specific fork version |
 
 Multi-arch: `linux/amd64` + `linux/arm64`. Image size ~83MB.
 

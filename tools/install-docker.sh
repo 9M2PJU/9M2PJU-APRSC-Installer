@@ -6,7 +6,7 @@
 #
 # Detects the OS and container runtime:
 #   - Linux:  uses Docker (installs it if missing), pulls the multi-arch
-#             image from ghcr.io/9m2pju/aprsc:latest
+#             image from docker.io/9m2pju/aprsc:latest
 #   - FreeBSD: uses Podman (installs it if missing), builds the FreeBSD
 #             image locally from Dockerfile.freebsd (no FreeBSD CI build
 #             exists since GitHub Actions has no native FreeBSD runners)
@@ -16,7 +16,7 @@
 # in the foreground via the image entrypoint; this script starts it in
 # the background with -d.
 #
-# Container image: ghcr.io/9m2pju/aprsc:latest  (Linux)
+# Container image: docker.io/9m2pju/aprsc:latest  (Linux)
 #                  locally built                (FreeBSD)
 
 set -eu
@@ -59,8 +59,9 @@ esac
 
 log "detected OS=$OS ARCH=$ARCH"
 
-# Image name on GHCR (Linux only - FreeBSD builds locally).
-IMAGE_LINUX="ghcr.io/9m2pju/aprsc:latest"
+# Image name on Docker Hub (Linux only - FreeBSD builds locally).
+# Also available on GHCR: ghcr.io/9m2pju/aprsc:latest
+IMAGE_LINUX="docker.io/9m2pju/aprsc:latest"
 CONTAINER_NAME="aprsc"
 CONF_DIR="/opt/aprsc/etc"
 LOG_DIR="/opt/aprsc/logs"
