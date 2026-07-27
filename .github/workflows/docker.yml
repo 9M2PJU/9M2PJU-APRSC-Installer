@@ -1,7 +1,7 @@
 name: Docker
 
 # Builds and pushes a multi-arch (amd64 + arm64) Linux Docker image to
-# the GitHub Container Registry (GHCR).
+# both the GitHub Container Registry (GHCR) and Docker Hub.
 #
 # - On every push/PR to main: builds and pushes :main tag
 # - On v* tags: also tags :latest, :<version>, :<version>-9M2PJU
@@ -30,7 +30,8 @@ env:
   # GHCR requires lowercase repository names. github.repository_owner
   # preserves the case of the GitHub username (9M2PJU), so we lowercase
   # it here to get 9m2pju.
-  IMAGE: ghcr.io/9m2pju/aprsc
+  IMAGE_GHCR: ghcr.io/9m2pju/aprsc
+  IMAGE_DOCKERHUB: docker.io/9m2pju/aprsc
 
 jobs:
   build:
@@ -53,15 +54,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Compute tags
         id: tags
         run: |
           set -e
           if [ "${{ startsWith(github.ref, 'refs/tags/v') }}" = "true" ]; then
             VER="$(cat src/VERSION | tr -d '[:space:]')"
-            TAGS="${{ env.IMAGE }}:latest,${{ env.IMAGE }}:${VER},${{ env.IMAGE }}:${VER}-9M2PJU"
+            TAGS="${{ env.IMAGE_GHCR }}:latest,${{ env.IMAGE_GHCR }}:${VER},${{ env.IMAGE_GHCR }}:${VER}-9M2PJU"
+            TAGS="$TAGS,${{ env.IMAGE_DOCKERHUB }}:latest,${{ env.IMAGE_DOCKERHUB }}:${VER},${{ env.IMAGE_DOCKERHUB }}:${VER}-9M2PJU"
           else
-            TAGS="${{ env.IMAGE }}:main"
+            TAGS="${{ env.IMAGE_GHCR }}:main,${{ env.IMAGE_DOCKERHUB }}:main"
           fi
           echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
 
